@@ -1,4 +1,4 @@
-# PyFL_Lara-PredictIWAK
+# PyFL_Lara-PredictIWAK-Long Short Term Memory
 langkah-langkah untuk membangun aplikasi prediksi penjualan ikan tongkol dengan Python (machine learning), MongoDB (database), Laravel (backend + frontend prediksi), dan Flutter (mobile input data):
 1. Persiapan Lingkungan
 Python: Install Anaconda atau virtual environment dan pustaka yang dibutuhkan (pandas, scikit-learn, flask, pymongo).
