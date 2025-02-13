@@ -1,0 +1,50 @@
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+from sklearn.preprocessing import MinMaxScaler
+import joblib
+from pymongo import MongoClient
+
+# Koneksi ke MongoDB
+client = MongoClient("mongodb://localhost:27017/")
+db = client["penjualan_db"]
+collection = db["penjualan"]
+
+# Ambil data dari MongoDB
+data = pd.DataFrame(list(collection.find({}, {"_id": 0})))
+data['tanggal'] = pd.to_datetime(data['tanggal'])
+data = data.sort_values(by="tanggal")
+
+# Normalisasi data
+scaler = MinMaxScaler()
+data[['harga', 'volume']] = scaler.fit_transform(data[['harga', 'volume']])
+
+# Membuat dataset time-series
+def create_sequences(data, seq_length):
+    X, y = [], []
+    for i in range(len(data) - seq_length):
+        X.append(data[i:i+seq_length])
+        y.append(data[i+seq_length])
+    return np.array(X), np.array(y)
+
+seq_length = 10
+X, y = create_sequences(data[['harga', 'volume']].values, seq_length)
+
+# Membuat model LSTM
+model = Sequential([
+    LSTM(50, return_sequences=True, input_shape=(seq_length, 2)),
+    LSTM(50),
+    Dense(2)
+])
+model.compile(optimizer='adam', loss='mse')
+
+# Melatih model
+model.fit(X, y, epochs=10, batch_size=8)
+
+# Simpan model dan scaler
+model.save("../models/lstm_model.h5")
+joblib.dump(scaler, "../models/scaler.pkl")
+
+print("Model LSTM dan scaler berhasil disimpan!")
